@@ -1,0 +1,3 @@
+Please build a MongoDB query for the following request:
+
+{query}

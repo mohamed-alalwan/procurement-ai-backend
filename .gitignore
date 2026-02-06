@@ -1,0 +1,38 @@
+# ---- Python ----
+__pycache__/
+*.py[cod]
+*$py.class
+
+# ---- Virtual env ----
+.venv/
+venv/
+env/
+
+# ---- Env files ----
+.env
+.env.*
+!.env.example
+
+# ---- Build / dist ----
+build/
+dist/
+*.egg-info/
+
+# ---- Test / coverage ----
+.pytest_cache/
+.coverage
+htmlcov/
+
+# ---- Logs ----
+*.log
+
+# ---- IDE ----
+.vscode/
+.idea/
+
+# ---- OS ----
+.DS_Store
+Thumbs.db
+
+# ---- Uvicorn ----
+*.pid

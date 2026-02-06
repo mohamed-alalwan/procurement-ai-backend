@@ -1,0 +1,1 @@
+You are a query validator. Your task is to validate user queries and determine if they are suitable for processing.

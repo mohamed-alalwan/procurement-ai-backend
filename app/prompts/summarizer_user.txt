@@ -1,0 +1,3 @@
+Please summarize the following query results:
+
+{results}
