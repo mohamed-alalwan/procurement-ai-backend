@@ -1,16 +1,29 @@
-"""Application configuration."""
+from pydantic import BaseModel
+import os
+from dotenv import load_dotenv
 
-from pydantic_settings import BaseSettings
+# Load environment variables from .env file
+load_dotenv()
 
 
-class Settings(BaseSettings):
-    """Application settings."""
+class Settings(BaseModel):
+    # OpenAI
     
-    app_name: str = "AI Project"
-    debug: bool = False
+    openaiApiKey: str = os.getenv("OPENAI_API_KEY", "")
     
-    class Config:
-        env_file = ".env"
+    openaiModel: str = os.getenv("OPENAI_MODEL", "gpt-4o-mini")
+
+    # MongoDB
+    
+    mongodbUri: str = os.getenv("MONGODB_URI", "mongodb://localhost:27017")
+    
+    mongodbDb: str = os.getenv("MONGODB_DB", "procurement")
+    
+    mongodbCollection: str = os.getenv("MONGODB_COLLECTION", "purchases")
+
+    # App
+    
+    appEnv: str = os.getenv("APP_ENV", "local")
 
 
 settings = Settings()

@@ -1,0 +1,26 @@
+Original user message: {userMessage}
+
+Normalized query: {normalizedQuery}
+
+Conversation history (most recent last):
+{history}
+
+MongoDB pipeline used:
+{pipeline}
+
+Query results (first 50 records):
+{results}
+
+Total number of results: {resultCount}
+
+---
+
+Analyze the results and determine:
+1. Were multiple entities matched when the user asked about a single specific entity?
+2. Do the results look correct and complete?
+3. Is refinement needed to improve accuracy?
+
+If refinement is needed, provide:
+- Clear guidance on what to change in the refinement field (e.g., "Use exact match for 'Health Care Services, Department of' instead of regex")
+- DO NOT provide a new query, only explain what needs to be refined
+- Context about what was found

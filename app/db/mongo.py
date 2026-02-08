@@ -1,16 +1,41 @@
-"""MongoDB connection and utilities."""
+from pymongo import MongoClient
+from typing import Any, Dict, List, Optional
 
-from motor.motor_asyncio import AsyncIOMotorClient
+from app.core.config import settings
 
 
-class MongoDB:
-    """MongoDB connection manager."""
+_mongoClient: Optional[MongoClient] = None
+
+
+def getMongoClient() -> MongoClient:
+    global _mongoClient
+
+    # Important: create one client and reuse it (connection pooling).
     
-    def __init__(self, uri: str, database: str):
-        """Initialize MongoDB connection."""
-        self.client = AsyncIOMotorClient(uri)
-        self.db = self.client[database]
+    if not _mongoClient:
+        _mongoClient = MongoClient(settings.mongodbUri)
+
+    return _mongoClient
+
+
+def getCollection():
+    client = getMongoClient()
+
+    db = client[settings.mongodbDb]
+
+    collection = db[settings.mongodbCollection]
+
+    return collection
+
+
+def runAggregation(pipeline: List[Dict[str, Any]], limit: int = 30) -> List[Dict[str, Any]]:
+    collection = getCollection()
+
+    # Important: allowDiskUse helps when aggregations are heavy.
     
-    async def close(self):
-        """Close the database connection."""
-        self.client.close()
+    results = list(collection.aggregate(pipeline, allowDiskUse=True))
+
+    # Note: BSON types may appear depending on dataset (ObjectId, datetime).
+    # We'll handle JSON serialization later in utils if needed.
+
+    return results

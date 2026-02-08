@@ -36,3 +36,5 @@ Thumbs.db
 
 # ---- Uvicorn ----
 *.pid
+
+procurement.csv

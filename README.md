@@ -1,52 +1,50 @@
-# AI Project
+# Procurement AI Assistant (Backend)
 
-An AI-powered application with agent-based architecture for natural language query processing.
+Multi-agent AI system that converts natural language questions into MongoDB queries for California state procurement data (FY 2012–2015). Returns structured JSON with answers, data, and suggested follow-up questions.
 
-## Project Structure
-
-```
-app/
-├── main.py                 # Application entry point
-├── core/                   # Core configuration
-├── api/                    # API routes
-├── agents/                 # AI agents
-├── prompts/                # Prompt templates
-├── db/                     # Database connections
-└── utils/                  # Utility functions
-
-tests/                      # Test suite
-```
-
-## Setup
-
-1. Copy `.env.example` to `.env` and fill in your configuration:
-   ```bash
-   cp .env.example .env
-   ```
-
-2. Install dependencies:
-   ```bash
-   pip install -r requirements.txt
-   ```
-
-3. Run the application:
-   ```bash
-   python app/main.py
-   ```
-
-## Agents
-
-- **User Query Validator**: Validates incoming user queries
-- **MongoDB Query Builder**: Converts natural language to MongoDB queries
-- **Result Summarizer**: Summarizes query results
-- **Suggested Questions**: Generates follow-up questions
-
-## Testing
+## Quick Start
 
 ```bash
-pytest tests/
+cp .env.example .env  # Add OpenAI key and MongoDB URI
+Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
+.venv\Scripts\activate
+pip install -r requirements.txt
+python scripts/ingest_csv_to_mongo.py  # Load 346,018 records
+uvicorn app.main:app --reload
 ```
 
-## License
+API runs at `http://localhost:8000`. Hit `/api/chat` with user messages.
 
-MIT
+## What it does
+
+- Validates user questions and asks for clarification if needed
+- Converts natural language → MongoDB aggregation pipelines
+- Self-validates and refines queries for accuracy
+- Generates natural language summaries from results
+- Suggests 3 contextual follow-up questions
+- Returns structured data with column metadata for visualization
+
+## How it works
+
+Five specialized LLM agents orchestrated in sequence:
+1. **User Query Validator** – Normalizes questions or requests clarification
+2. **Mongo Query Builder** – Generates aggregation pipelines from natural language
+3. **Mongo Query Validator** – Checks result quality and suggests refinements (max 1 iteration)
+4. **Result Summarizer** – Creates conversational answers from data
+5. **Suggested Questions** – Generates contextual follow-ups
+
+Each agent uses structured prompts and returns typed Pydantic schemas for reliability.
+
+## Stack
+
+- FastAPI for REST API
+- OpenAI GPT-5.1 for agents
+- MongoDB for data storage
+- Pydantic for schema validation
+- Python 3.11+
+
+---
+
+**Data**: 346,018 California state procurement records with fiscal/calendar year fields for filtering.
+
+**Field Catalog**: `app/core/field_catalog.json` was generated separately based on data documentation and designed alongside the CSV ingestion script to provide field metadata (types, descriptions, synonyms) for the query builder agent.

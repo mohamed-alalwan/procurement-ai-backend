@@ -1,0 +1,7 @@
+User question: {question}
+
+Conversation history (most recent last):
+{history}
+
+Assistant answer:
+{answer}

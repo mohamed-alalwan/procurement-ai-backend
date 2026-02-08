@@ -1,0 +1,321 @@
+{
+  "creation_date": {
+    "type": "date",
+    "format": "m/d/yyyy",
+    "nullable": false,
+    "description": "Purchase order creation date stored as MongoDB Date (parsed from M/D/YYYY).",
+    "synonyms": ["created date", "creation date", "order created"],
+    "notes": ["Preferred for time grouping"]
+  },
+
+  "purchase_date": {
+    "type": "date",
+    "format": "m/d/yyyy",
+    "nullable": true,
+    "description": "Recorded purchase date stored as MongoDB Date (parsed from M/D/YYYY).",
+    "synonyms": ["purchase date", "order date"],
+    "notes": ["May be blank", "May be backdated"]
+  },
+
+  "fiscal_year": {
+    "type": "string",
+    "nullable": false,
+    "description": "California fiscal year (July–June).",
+    "synonyms": ["fy", "fiscal"]
+  },
+
+  "calendar_year": {
+    "type": "number",
+    "format": "int",
+    "nullable": true,
+    "description": "Calendar year derived from creation_date."
+  },
+
+  "calendar_month": {
+    "type": "number",
+    "format": "int",
+    "nullable": true,
+    "description": "Calendar month (1-12) derived from creation_date."
+  },
+
+  "calendar_quarter": {
+    "type": "number",
+    "format": "int",
+    "nullable": true,
+    "description": "Calendar quarter (1-4) derived from creation_date."
+  },
+
+  "fiscal_year_start": {
+    "type": "number",
+    "format": "int",
+    "nullable": true,
+    "description": "Fiscal year start year derived from creation_date (CA fiscal year starts July 1)."
+  },
+
+  "fiscal_quarter": {
+    "type": "number",
+    "format": "int",
+    "nullable": true,
+    "description": "Fiscal quarter (1-4) derived from creation_date (CA FY Jul-Sep=Q1)."
+  },
+
+  "lpa_number": {
+    "type": "string",
+    "nullable": true,
+    "description": "Leveraged Procurement Agreement identifier."
+  },
+
+  "purchase_order_number": {
+    "type": "string",
+    "nullable": false,
+    "description": "Purchase order identifier.",
+    "notes": [
+      "NOT globally unique across departments",
+      "For unique order counting, use combination of (department_name, purchase_order_number)",
+      "Same PO number can appear in different departments"
+    ],
+    "synonyms": ["po number", "order number", "po"]
+  },
+
+  "requisition_number": {
+    "type": "string",
+    "nullable": true,
+    "description": "Internal requisition tracking number."
+  },
+
+  "acquisition_type": {
+    "type": "string",
+    "nullable": false,
+    "description": "High-level acquisition category describing IT vs NON-IT and Goods vs Services.",
+    "enums": [
+      "IT Goods",
+      "IT Services",
+      "IT Telecommunications",
+      "NON-IT Goods",
+      "NON-IT Services"
+    ],
+    "synonyms": ["acquisition type", "category"]
+  },
+
+  "sub_acquisition_type": {
+    "type": "string",
+    "nullable": true,
+    "description": "Detailed subtype of acquisition category.",
+    "enums": [
+      "Personal Services",
+      "Legal Services",
+      "Consulting Services",
+      "Public Works",
+      "Interagency Agreements",
+      "Services are specifically exempt by statute",
+      "Nonprofit Organizations",
+      "Memberships",
+      "Joint Power Agreement",
+      "Emergency Contract",
+      "Agreements with other governmental entities and public universities",
+      "Expert Witneses",
+      "Subvention and Local Assistance",
+      "UC, CSU, Community Colleges, and foundations / auxiliaries",
+      "Elevator Maintenance",
+      "Convention and Conference Services",
+      "Architectural and Engineering",
+      "Printing Services",
+      "Contracts with Local Governments",
+      "Contracting for Students",
+      "Fiscal Intermediaries",
+      "Federally Funded",
+      "Hazardous Activities",
+      "Revenue Agreements",
+      "Commercial Office Moving Services"
+    ]
+  },
+
+  "acquisition_method": {
+    "type": "string",
+    "nullable": true,
+    "description": "Primary procurement method.",
+    "enums": [
+      "WSCA/Coop",
+      "Informal Competitive",
+      "Statewide Contract",
+      "Services are specifically exempt by statute",
+      "SB/DVBE Option",
+      "NCB",
+      "Formal Competitive",
+      "Fair and Reasonable",
+      "State Programs",
+      "Services are specifically exempt by policy",
+      "CMAS",
+      "LCB",
+      "Master Purchase/Price Agreement",
+      "Master Service Agreement",
+      "Emergency Purchase",
+      "CRP",
+      "Software License Program",
+      "Special Category Request (SCR)",
+      "Statement of Qualifications",
+      "State Price Schedule"
+    ],
+    "synonyms": ["method"]
+  },
+
+  "sub_acquisition_method": {
+    "type": "string",
+    "nullable": true,
+    "description": "Detailed procurement method subtype.",
+    "enums": [
+      "Other",
+      "Prison Industry Authority (PIA)",
+      "Office of State Printing (OSP)",
+      "Only goods and services that meet needs of the State",
+      "Services are specifically exempt by statute",
+      "Emergency acquisition for the protection of the public",
+      "Contract with other government agency",
+      "A single firm services a geographic region",
+      "Interagency Agreement",
+      "Fleet",
+      "Transportation Management Unit (TMU)",
+      "Master Service Agreement",
+      "Legal defense advice or services by an attorney or staff",
+      "SB/DVBE Option",
+      "Subvention contracts with private/non-profit entity/agency",
+      "Surplus"
+    ]
+  },
+
+  "department_name": {
+    "type": "string",
+    "nullable": true,
+    "description": "Purchasing department name.",
+    "synonyms": ["department", "agency"]
+  },
+
+  "supplier_code": {
+    "type": "string",
+    "nullable": true,
+    "description": "Supplier numeric identifier."
+  },
+
+  "supplier_name": {
+    "type": "string",
+    "nullable": true,
+    "description": "Supplier or vendor name.",
+    "synonyms": ["vendor", "supplier"]
+  },
+
+  "supplier_qualifications": {
+    "type": "string",
+    "nullable": true,
+    "description": "Supplier qualification flags such as SB, DVBE, MB."
+  },
+
+  "supplier_zip_code": {
+    "type": "string",
+    "nullable": true,
+    "description": "Supplier ZIP code."
+  },
+
+  "calcard": {
+    "type": "string",
+    "nullable": true,
+    "description": "Indicates CalCard purchase.",
+    "enums": ["YES", "NO"],
+    "synonyms": ["purchase card", "p-card"]
+  },
+
+  "item_name": {
+    "type": "string",
+    "nullable": true,
+    "description": "Purchased item name.",
+    "synonyms": ["item", "product"]
+  },
+
+  "item_description": {
+    "type": "string",
+    "nullable": true,
+    "description": "Detailed item description."
+  },
+
+  "quantity": {
+    "type": "number",
+    "format": "float",
+    "nullable": true,
+    "description": "Quantity purchased stored as numeric (float). May be decimal."
+  },
+
+  "unit_price": {
+    "type": "number",
+    "format": "usd_float",
+    "nullable": true,
+    "description": "Unit price stored as numeric USD (parsed from currency string)."
+  },
+
+  "total_price": {
+    "type": "number",
+    "format": "usd_float",
+    "nullable": true,
+    "description": "Line item total spend stored as numeric USD (parsed from currency string).",
+    "synonyms": ["spend", "amount", "total"],
+    "notes": ["Primary spend field"]
+  },
+
+  "classification_codes": {
+    "type": "string",
+    "nullable": true,
+    "description": "Classification codes. May contain multiple values."
+  },
+
+  "normalized_unspsc": {
+    "type": "string",
+    "nullable": true,
+    "description": "Normalized UNSPSC code."
+  },
+
+  "commodity_title": {
+    "type": "string",
+    "nullable": true,
+    "description": "Commodity title."
+  },
+
+  "class": {
+    "type": "string",
+    "nullable": true,
+    "description": "UNSPSC class code."
+  },
+
+  "class_title": {
+    "type": "string",
+    "nullable": true,
+    "description": "UNSPSC class title."
+  },
+
+  "family": {
+    "type": "string",
+    "nullable": true,
+    "description": "UNSPSC family code."
+  },
+
+  "family_title": {
+    "type": "string",
+    "nullable": true,
+    "description": "UNSPSC family title."
+  },
+
+  "segment": {
+    "type": "string",
+    "nullable": true,
+    "description": "UNSPSC segment code."
+  },
+
+  "segment_title": {
+    "type": "string",
+    "nullable": true,
+    "description": "UNSPSC segment title."
+  },
+
+  "location": {
+    "type": "string",
+    "nullable": true,
+    "description": "ZIP plus coordinates string."
+  }
+}

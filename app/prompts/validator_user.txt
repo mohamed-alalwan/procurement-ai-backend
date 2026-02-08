@@ -1,3 +1,0 @@
-Please validate the following user query:
-
-{query}

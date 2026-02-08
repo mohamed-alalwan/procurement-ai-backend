@@ -1,0 +1,4 @@
+User message: {message}
+
+Conversation history (most recent last):
+{history}

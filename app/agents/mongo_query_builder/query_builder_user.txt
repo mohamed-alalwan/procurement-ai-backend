@@ -1,0 +1,12 @@
+Normalized user query: {normalizedQuery}
+
+Conversation history (most recent last):
+{history}
+
+Collection: {collectionName}
+
+Field catalog (authoritative):
+{fieldCatalog}
+
+Query validator refinement guidance:
+{refinement}
