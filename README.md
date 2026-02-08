@@ -47,4 +47,6 @@ Each agent uses structured prompts and returns typed Pydantic schemas for reliab
 
 **Data**: 346,018 California state procurement records with fiscal/calendar year fields for filtering.
 
+**Source**: Dataset downloaded from [Kaggle - Large Purchases by the State of CA](https://www.kaggle.com/datasets/sohier/large-purchases-by-the-state-of-ca). The CSV file (`data/procurement.csv`) is in `.gitignore` due to its size. Download from Kaggle if setting up a new environment.
+
 **Field Catalog**: `app/core/field_catalog.json` was generated separately based on data documentation and designed alongside the CSV ingestion script to provide field metadata (types, descriptions, synonyms) for the query builder agent.
