@@ -21,6 +21,11 @@ class ChatRequest(BaseModel):
     history: List[HistoryMessage] = Field(default_factory=list)
 
 
+@router.get("/health")
+def health() -> Dict[str, str]:
+    return {"status": "ok"}
+
+
 @router.post("/chat")
 def chat(body: ChatRequest) -> Dict[str, Any]:
     # Important: keep history trimmed to avoid huge prompts.
