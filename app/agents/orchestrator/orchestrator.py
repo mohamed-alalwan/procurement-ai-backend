@@ -16,24 +16,14 @@ def runProcurementAssistant(
     collectionName: str,
 ) -> Dict[str, Any]:
     # 1) Validate user query
-    print(f"[ORCHESTRATOR] Starting query validation for message: {message[:100]}...")
     validatorResult = runUserQueryValidator(message=message, history=history)
-    print(f"[ORCHESTRATOR] Validator result - isValid: {validatorResult.isValid}")
-
+    
     if not validatorResult.isValid:
-        # Add validator output to history for context
-        historyWithValidator = history + [
-            {"role": "assistant", "content": validatorResult.clarifyingQuestion}
-        ]
-        
-        # Generate suggested questions even during clarification
         suggestionsOutput = runSuggestedQuestions(
             question=message, 
             answer=validatorResult.clarifyingQuestion,
-            history=historyWithValidator
+            history=history + [{"role": "assistant", "content": validatorResult.clarifyingQuestion}]
         )
-        print(f"[ORCHESTRATOR] Generated {len(suggestionsOutput.suggestedQuestions)} suggested questions during clarification")
-        
         return {
             "status": "needs_clarification",
             "clarifyingQuestion": validatorResult.clarifyingQuestion,
@@ -41,22 +31,16 @@ def runProcurementAssistant(
         }
 
     normalizedQuery = validatorResult.normalizedQuery or message
-    print(f"[ORCHESTRATOR] Normalized query: {normalizedQuery}")
+    historyWithNormalized = history + [{"role": "assistant", "content": f"Normalized: {normalizedQuery}"}]
 
-    # Add normalized query to history for context
-    historyWithNormalized = history + [
-        {"role": "assistant", "content": f"Normalized query: {normalizedQuery}"}
-    ]
-
-    # Query refinement loop (max 2 iterations to avoid infinite loops)
+    # 2) Build and execute query with retry logic
     maxRefinements = 1
     refinementCount = 0
     refinementGuidance = None
     queryContext = None
+    executionErrorRetry = False
 
     while refinementCount <= maxRefinements:
-        # 2) Build Mongo pipeline
-        print(f"[ORCHESTRATOR] Building MongoDB aggregation pipeline (attempt {refinementCount + 1})")
         try:
             queryOutput = runMongoQueryBuilder(
                 normalizedQuery=normalizedQuery,
@@ -65,40 +49,27 @@ def runProcurementAssistant(
                 refinement=refinementGuidance,
             )
             pipeline = queryOutput.pipeline
-            print(f"[ORCHESTRATOR] Generated pipeline with {len(pipeline)} stages: {queryOutput.explanation}")
-        except ValueError as e:
-            # Pipeline validation failed
-            print(f"[ORCHESTRATOR ERROR] Pipeline validation failed: {str(e)}")
+        except (ValueError, Exception) as e:
             return {
                 "status": "error",
-                "answer": f"Unable to generate a valid query: {str(e)}. Please try rephrasing your question.",
-                "suggestedQuestions": [],
-            }
-        except Exception as e:
-            # Other errors during query building
-            print(f"[ORCHESTRATOR ERROR] Query builder error: {str(e)}")
-            return {
-                "status": "error",
-                "answer": f"An error occurred while processing your query: {str(e)}",
+                "error": f"Unable to generate query: {str(e)}",
                 "suggestedQuestions": [],
             }
 
-        # 3) Execute
-        print("[ORCHESTRATOR] Executing MongoDB aggregation")
         try:
             results = runAggregation(pipeline)
-            print(f"[ORCHESTRATOR] Query returned {len(results)} results")
         except Exception as e:
-            # MongoDB execution error
-            print(f"[ORCHESTRATOR ERROR] MongoDB execution error: {str(e)}")
+            if not executionErrorRetry:
+                executionErrorRetry = True
+                refinementGuidance = f"Previous query failed: {str(e)}. Fix the query."
+                continue
             return {
                 "status": "error",
-                "answer": f"Database query failed: {str(e)}. The query may be malformed.",
+                "error": f"Database query failed: {str(e)}",
                 "suggestedQuestions": [],
             }
 
-        # 4) Validate query results
-        print("[ORCHESTRATOR] Validating query results")
+        # 3) Validate results
         try:
             queryValidation = runMongoQueryValidator(
                 userMessage=message,
@@ -107,70 +78,45 @@ def runProcurementAssistant(
                 results=results,
                 history=history,
             )
-            print(f"[ORCHESTRATOR] Query validation - isValid: {queryValidation.isValid}")
-
+            
             if queryValidation.isValid:
-                # Results are good, proceed to summarization
                 queryContext = queryValidation.context
                 break
-            else:
-                # Refinement needed
-                print(f"[ORCHESTRATOR] Refinement needed: {queryValidation.refinement}")
-                
-                if refinementCount >= maxRefinements:
-                    # Max refinements reached, proceed anyway
-                    print("[ORCHESTRATOR] Max refinements reached, proceeding with current results")
-                    queryContext = queryValidation.context
-                    break
-                
-                # Use refinement guidance for next iteration
-                refinementGuidance = queryValidation.refinement
+            
+            if refinementCount >= maxRefinements:
                 queryContext = queryValidation.context
-                refinementCount += 1
-                print(f"[ORCHESTRATOR] Applying refinement guidance (attempt {refinementCount + 1})")
-                
-        except Exception as e:
-            # Validation error, proceed with current results
-            print(f"[ORCHESTRATOR WARNING] Query validation error: {str(e)}, proceeding anyway")
+                break
+            
+            refinementGuidance = queryValidation.refinement
+            queryContext = queryValidation.context
+            refinementCount += 1
+        except Exception:
             break
 
-    # Add query builder context to history
+    # 4) Summarize and suggest questions
     historyWithQuery = historyWithNormalized + [
-        {"role": "assistant", "content": f"Generated MongoDB pipeline with {len(pipeline)} stages"}
+        {"role": "assistant", "content": f"Pipeline: {len(pipeline)} stages"}
     ]
-
-    # Add query validation context if available
     if queryContext:
-        historyWithQuery.append({"role": "assistant", "content": f"Query context: {queryContext}"})
+        historyWithQuery.append({"role": "assistant", "content": queryContext})
 
-    # 5) Summarize
-    print("[ORCHESTRATOR] Generating summary")
-    summarizerOutput = runResultSummarizer(question=normalizedQuery, results=results, history=historyWithQuery)
-    print(f"[ORCHESTRATOR] Summary generated: {summarizerOutput.answer[:100]}...")
-
-    # Add summarizer output to history for context
-    historyWithSummarizer = historyWithQuery + [
-        {"role": "assistant", "content": summarizerOutput.answer}
-    ]
-
-    # 6) Suggested questions
-    print("[ORCHESTRATOR] Generating suggested questions")
-    suggestionsOutput = runSuggestedQuestions(question=normalizedQuery, answer=summarizerOutput.answer, history=historyWithSummarizer)
-    print(f"[ORCHESTRATOR] Generated {len(suggestionsOutput.suggestedQuestions)} suggested questions")
-
-    # Convert ObjectIds to strings for JSON serialization
-    serializedResults = convertObjectIds(results)
-
-    # Convert column metadata to dict format
-    columns = [col.model_dump() for col in queryOutput.columns]
+    summarizerOutput = runResultSummarizer(
+        question=normalizedQuery, 
+        results=results, 
+        history=historyWithQuery
+    )
+    
+    suggestionsOutput = runSuggestedQuestions(
+        question=normalizedQuery,
+        answer=summarizerOutput.answer,
+        history=historyWithQuery + [{"role": "assistant", "content": summarizerOutput.answer}]
+    )
 
     return {
         "status": "ok",
         "answer": summarizerOutput.answer,
         "suggestedQuestions": suggestionsOutput.suggestedQuestions,
-        # Useful for debugging/demo. You can hide later if you want.
-        
         "pipeline": pipeline,
-        "data": serializedResults,
-        "columns": columns,
+        "data": convertObjectIds(results),
+        "columns": [col.model_dump() for col in queryOutput.columns],
     }
