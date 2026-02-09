@@ -38,6 +38,7 @@ Each agent uses structured prompts and returns typed Pydantic schemas for reliab
 ## Stack
 
 - FastAPI for REST API
+- LangChain for agentic framework
 - OpenAI GPT-5.1 for agents
 - MongoDB for data storage
 - Pydantic for schema validation
