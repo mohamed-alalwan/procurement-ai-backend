@@ -15,10 +15,11 @@ def runProcurementAssistant(
     history: List[Dict[str, Any]],
     collectionName: str,
 ) -> Dict[str, Any]:
-    # 1) Validate user query
+    # Agent 1: User Query Validator
     validatorResult = runUserQueryValidator(message=message, history=history)
     
     if not validatorResult.isValid:
+        # Agent 5: Suggested Questions (clarification)
         suggestionsOutput = runSuggestedQuestions(
             question=message, 
             answer=validatorResult.clarifyingQuestion,
@@ -33,7 +34,6 @@ def runProcurementAssistant(
     normalizedQuery = validatorResult.normalizedQuery or message
     historyWithNormalized = history + [{"role": "assistant", "content": f"Normalized: {normalizedQuery}"}]
 
-    # 2) Build and execute query with retry logic
     maxRefinements = 1
     refinementCount = 0
     refinementGuidance = None
@@ -41,6 +41,7 @@ def runProcurementAssistant(
     executionErrorRetry = False
 
     while refinementCount <= maxRefinements:
+        # Agent 2: Mongo Query Builder
         try:
             queryOutput = runMongoQueryBuilder(
                 normalizedQuery=normalizedQuery,
@@ -69,7 +70,7 @@ def runProcurementAssistant(
                 "suggestedQuestions": [],
             }
 
-        # 3) Validate results
+        # Agent 3: Mongo Query Validator
         try:
             queryValidation = runMongoQueryValidator(
                 userMessage=message,
@@ -93,19 +94,20 @@ def runProcurementAssistant(
         except Exception:
             break
 
-    # 4) Summarize and suggest questions
     historyWithQuery = historyWithNormalized + [
         {"role": "assistant", "content": f"Pipeline: {len(pipeline)} stages"}
     ]
     if queryContext:
         historyWithQuery.append({"role": "assistant", "content": queryContext})
 
+    # Agent 4: Result Summarizer
     summarizerOutput = runResultSummarizer(
         question=normalizedQuery, 
         results=results, 
         history=historyWithQuery
     )
     
+    # Agent 5: Suggested Questions
     suggestionsOutput = runSuggestedQuestions(
         question=normalizedQuery,
         answer=summarizerOutput.answer,
