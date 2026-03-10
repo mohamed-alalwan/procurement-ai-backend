@@ -63,25 +63,22 @@ def runMongoQueryBuilder(
     collectionName: str,
     refinement: str = None,
 ) -> MongoQueryOutput:
-    systemPrompt = loadPrompt(PROMPTS_DIR, "query_builder_system.txt")
-
-    userPrompt = loadPrompt(PROMPTS_DIR, "query_builder_user.txt")
+    prompt = loadPrompt(PROMPTS_DIR, "prompt.txt")
 
     dataOverview = loadDataOverview()
     fieldCatalog = loadFieldCatalog()
 
     parser = PydanticOutputParser(pydantic_object=MongoQueryOutput)
 
-    prompt = ChatPromptTemplate.from_messages(
+    promptTemplate = ChatPromptTemplate.from_messages(
         [
-            ("system", systemPrompt + "\n\n{format_instructions}"),
-            ("human", userPrompt),
+            ("system", prompt + "\n\n{format_instructions}"),
         ]
     )
 
     model = getChatModel()
 
-    chain = prompt.partial(format_instructions=parser.get_format_instructions()) | model | parser
+    chain = promptTemplate.partial(format_instructions=parser.get_format_instructions()) | model | parser
 
     trimmedHistory = history[-5:] if history else []
 

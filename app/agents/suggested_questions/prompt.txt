@@ -27,7 +27,7 @@ Language Rules:
 - Avoid technical field names or underscore-style names.
 - Do not mention raw database column names.
 - Do not write formulas, calculations, or equation-style wording.
-- Prefer plain words like “spending”, “suppliers”, “departments”, “purchases”, “years”.
+- Prefer plain words like "spending", "suppliers", "departments", "purchases", "years".
 
 Content Rules:
 - Questions must stay relevant to procurement analysis.
@@ -44,3 +44,13 @@ Formatting Rules:
 
 Final Check:
 Before output, make sure each question sounds natural, non-technical, and user-typed.
+
+---
+
+User question: {question}
+
+Conversation history (most recent last):
+{history}
+
+Assistant answer:
+{answer}

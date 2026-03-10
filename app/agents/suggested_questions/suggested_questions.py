@@ -15,25 +15,22 @@ PROMPTS_DIR = Path(__file__).parent
 
 
 def runSuggestedQuestions(question: str, answer: str, history: List[Dict[str, Any]]) -> SuggestionsOutput:
-    systemPrompt = loadPrompt(PROMPTS_DIR, "suggestions_system.txt")
-
-    userPrompt = loadPrompt(PROMPTS_DIR, "suggestions_user.txt")
+    prompt = loadPrompt(PROMPTS_DIR, "prompt.txt")
 
     dataOverview = loadDataOverview()
     fieldCatalog = loadFieldCatalog()
 
     parser = PydanticOutputParser(pydantic_object=SuggestionsOutput)
 
-    prompt = ChatPromptTemplate.from_messages(
+    promptTemplate = ChatPromptTemplate.from_messages(
         [
-            ("system", systemPrompt + "\n\n{format_instructions}"),
-            ("human", userPrompt),
+            ("system", prompt + "\n\n{format_instructions}"),
         ]
     )
 
     model = getChatModel()
 
-    chain = prompt.partial(format_instructions=parser.get_format_instructions()) | model | parser
+    chain = promptTemplate.partial(format_instructions=parser.get_format_instructions()) | model | parser
 
     # Important: keep history small.
     trimmedHistory = history[-5:] if history else []

@@ -70,9 +70,9 @@
     "nullable": false,
     "description": "Purchase order identifier.",
     "notes": [
-      "NOT globally unique across departments",
-      "For unique order counting, use combination of (department_name, purchase_order_number)",
-      "Same PO number can appear in different departments"
+      "A purchase order may contain multiple line items.",
+      "When counting orders, deduplicate using purchase_order_number.",
+      "Department should only be used when the user explicitly asks for department-level analysis."
     ],
     "synonyms": ["po number", "order number", "po"]
   },
@@ -186,7 +186,7 @@
   "department_name": {
     "type": "string",
     "nullable": true,
-    "description": "Purchasing department name.",
+    "description": "Official purchasing department name. This is an exact government entity identifier. Departments with similar wording represent different organizations and must never be merged or approximated (for example 'Health Care Services, Department of' and 'Correctional Health Care Services' are separate departments).",
     "synonyms": ["department", "agency"]
   },
 
@@ -200,13 +200,17 @@
     "type": "string",
     "nullable": true,
     "description": "Supplier or vendor name.",
-    "synonyms": ["vendor", "supplier"]
+    "synonyms": ["vendor", "supplier"],
+    "notes": [
+      "Exact supplier identifier",
+      "Different suppliers may have similar names and must not be merged"
+    ]
   },
 
   "supplier_qualifications": {
     "type": "string",
     "nullable": true,
-    "description": "Supplier qualification flags such as SB, DVBE, MB."
+    "description": "Space-separated supplier qualification codes such as SB, DVBE, MB, CA-SB. Multiple codes may appear in the same field. Queries filtering by qualifications should match whole qualification tokens rather than partial substrings."
   },
 
   "supplier_zip_code": {

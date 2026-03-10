@@ -8,6 +8,7 @@ from app.agents.suggested_questions import runSuggestedQuestions
 
 from app.db.mongo import runAggregation
 from app.utils.serialization import convertObjectIds
+from app.utils.regex_entity_resolver import resolveRegexEntities
 
 
 def runProcurementAssistant(
@@ -56,6 +57,22 @@ def runProcurementAssistant(
                 "error": f"Unable to generate query: {str(e)}",
                 "suggestedQuestions": [],
             }
+
+        # Regex Entity Resolver: detect ambiguous or empty entity matches before executing
+        if not refinementGuidance:  # skip on refinement passes — already resolved
+            regexCheck = resolveRegexEntities(pipeline)
+            if regexCheck["status"] == "needs_clarification":
+                suggestionsOutput = runSuggestedQuestions(
+                    question=message,
+                    answer=regexCheck["clarifyingQuestion"],
+                    history=history + [{"role": "assistant", "content": regexCheck["clarifyingQuestion"]}],
+                )
+                return {
+                    "status": "needs_clarification",
+                    "clarifyingQuestion": regexCheck["clarifyingQuestion"],
+                    "options": regexCheck["options"],
+                    "suggestedQuestions": suggestionsOutput.suggestedQuestions,
+                }
 
         try:
             results = runAggregation(pipeline)

@@ -22,24 +22,22 @@ def runMongoQueryValidator(
     results: List[Dict[str, Any]],
     history: List[Dict[str, Any]],
 ) -> MongoQueryValidatorOutput:
-    systemPrompt = loadPrompt(PROMPTS_DIR, "validator_system.txt")
-    userPrompt = loadPrompt(PROMPTS_DIR, "validator_user.txt")
+    prompt = loadPrompt(PROMPTS_DIR, "prompt.txt")
 
     dataOverview = loadDataOverview()
     fieldCatalog = loadFieldCatalog()
 
     parser = PydanticOutputParser(pydantic_object=MongoQueryValidatorOutput)
 
-    prompt = ChatPromptTemplate.from_messages(
+    promptTemplate = ChatPromptTemplate.from_messages(
         [
-            ("system", systemPrompt + "\n\n{format_instructions}"),
-            ("human", userPrompt),
+            ("system", prompt + "\n\n{format_instructions}"),
         ]
     )
 
     model = getChatModel()
 
-    chain = prompt.partial(format_instructions=parser.get_format_instructions()) | model | parser
+    chain = promptTemplate.partial(format_instructions=parser.get_format_instructions()) | model | parser
 
     # Limit results sent to LLM to avoid token overflow
     limitedResults = results[:50] if len(results) > 50 else results
